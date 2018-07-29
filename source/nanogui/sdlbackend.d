@@ -50,7 +50,7 @@ class SdlBackend
 		window = new SDL2Window(_sdl2,
 								SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 								width, height,
-								SDL_WINDOW_OPENGL);
+								SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
 		window.setTitle(title);
 		
@@ -121,7 +121,8 @@ class SdlBackend
 				}
 			}
 
-			screen.size = Vector2i(width, height);
+            auto size = window.getSize();
+			screen.size = Vector2i(size.x, size.y);
 			screen.draw(nvg);
 
 			window.swapBuffers();
