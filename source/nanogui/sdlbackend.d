@@ -59,15 +59,15 @@ class SdlBackend
 
 		window.setTitle(title);
 
-		import derelict.opengl3.gl3 : GLVersion;
+        //import derelict.opengl3.gl3 : GLVersion;
 
 		// reload OpenGL now that a context exists
-		_gl.reload(GLVersion.GL30, GLVersion.HighestSupported);
+        //_gl.reload(GLVersion.GL30, GLVersion.HighestSupported);
 
 		// redirect OpenGL output to our Logger
 		_gl.redirectDebugOutput();
 
-    nvg = nvgCreateContext(NVGContextFlag.Antialias, NVGContextFlag.Debug);
+        nvg = nvgCreateContext(NVGContextFlag.Antialias, NVGContextFlag.Debug);
 		enforce(nvg !is null, "cannot initialize NanoGui");
 
 		screen = new Screen(width, height, Clock.currTime.stdTime);
@@ -154,6 +154,7 @@ class SdlBackend
 
 			auto size = window.getSize();
 			screen.size = Vector2i(size.x, size.y);
+            screen.currTime = Clock.currTime.stdTime;
 			screen.draw(nvg);
 
 			window.swapBuffers();
@@ -179,32 +180,40 @@ protected:
 
 	public int getModifiers()
 	{
-		import derelict.sdl2.functions : SDL_GetModState;
-		import derelict.sdl2.types : KMOD_CTRL, KMOD_SHIFT, KMOD_ALT, KMOD_GUI;
+		import gfm.sdl2.keyboard;
+        import derelict.sdl2.internal.sdl_types : SDL_Keycode;
+//		import derelict.sdl2.types : KMOD_CTRL, KMOD_SHIFT, KMOD_ALT, KMOD_GUI;
 		import nanogui.common : KeyMod;
 
 		int modifiers;
-		immutable state = SDL_GetModState();
+		//immutable state = _sdl2.get
 
-		if (state & KMOD_CTRL)
+        //if (state & KMOD_CTRL)
+        if (_sdl2.keyboard.isPressed(SDL_Keycode.SDLK_LCTRL) ||
+            _sdl2.keyboard.isPressed(SDL_Keycode.SDLK_RCTRL))
 		{
 			modifiers |= KeyMod.Ctrl;
 			debug writeln("Ctrl");
 		}
 
-		if (state & KMOD_SHIFT)
+		//if (state & KMOD_SHIFT)
+        if (_sdl2.keyboard.isPressed(SDL_Keycode.SDLK_LSHIFT) ||
+            _sdl2.keyboard.isPressed(SDL_Keycode.SDLK_RSHIFT))
 		{
 			modifiers |= KeyMod.Shift;
 			debug writeln("shift");
 		}
 
-		if (state & KMOD_ALT)
+		//if (state & KMOD_ALT)
+        if (_sdl2.keyboard.isPressed(SDL_Keycode.SDLK_LALT) ||
+            _sdl2.keyboard.isPressed(SDL_Keycode.SDLK_RALT))
 		{
 			modifiers |= KeyMod.Alt;
 			debug writeln("alt");
 		}
 
-		if (state & KMOD_GUI)
+        if (_sdl2.keyboard.isPressed(SDL_Keycode.SDLK_LGUI) ||
+            _sdl2.keyboard.isPressed(SDL_Keycode.SDLK_RGUI))
 		{
 			modifiers |= KeyMod.Windows;
 			debug writeln("windows");

@@ -4,8 +4,6 @@ module nanogui.common;
 import gfm.math : vec2i, vec2f, vec4f, dot;
 public import arsd.nanovega : NVGContext, NVGColor;
 public import arsd.nanovega;
-import derelict.sdl2.functions : SDL_SetClipboardText, SDL_GetClipboardText, SDL_HasClipboardText;
-import derelict.sdl2.types : SDL_bool, SDL_FALSE, SDL_TRUE;
 
 alias Vector2i = vec2i;
 alias Vector2f = vec2f;
@@ -139,25 +137,25 @@ public void strokeColor (NVGContext ctx, Color color) nothrow @trusted @nogc
 
 public void setClipboardText(string text)
 {
-	import std.string : toStringz;
-	SDL_SetClipboardText(text.toStringz);
+	//import std.string : toStringz;
+	//SDL_SetClipboardText(text.toStringz);
 }
 
 public string getClipboardText()
 {
 	string text = "";
-	const char* cbstr = SDL_GetClipboardText();
-	if (cbstr !is null)
-	{
-		import std.string : fromStringz;
-		text = cbstr.fromStringz.idup;
-	}
+    //const char* cbstr = SDL_GetClipboardText();
+    //if (cbstr !is null)
+    //{
+    //    import std.string : fromStringz;
+    //    text = cbstr.fromStringz.idup;
+    //}
 	return text;
 }
 
 public bool hasClipboardText()
 {
-	return SDL_HasClipboardText() == SDL_TRUE;
+	return false;// SDL_HasClipboardText() == SDL_TRUE;
 }
 
 public Color contrastingColor(Color color)

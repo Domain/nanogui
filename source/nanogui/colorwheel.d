@@ -6,6 +6,7 @@ import std.math : sin, cos, sqrt, atan;
 import nanogui.widget;
 import nanogui.common : Vector2i, Vector2f, MouseButton, Color;
 import arsd.nanovega : linearGradient, NVGHSL;
+import gfm.math.funcs;
 
 /**
  * \class ColorWheel colorwheel.h nanogui/colorwheel.h
@@ -41,11 +42,8 @@ class ColorWheel : Widget
     final Color color() const
     {
         Color rgb    = hue2rgb(mHue, mBlack, mWhite);
-        //Color black  = Color(0.0f, 0.0f, 0.0f, 1.0f);
-        //Color white  = Color(1.0f, 1.0f, 1.0f, 1.0f);
-        Color result = rgb; // * (1 - mWhite - mBlack) + black * mBlack + white * mWhite;
-        result.v[] *= 255f;
-        return result;
+        rgb.v[] *= 255f;
+        return rgb;
     }
 
     /// Sets the current Color this ColorWheel has selected.
@@ -56,43 +54,6 @@ class ColorWheel : Widget
         mHue = hsv[0];
         mBlack = hsv[1];
         mWhite = hsv[2];
-
-        // float r = rgb.r, g = rgb.g, b = rgb.b;
-
-
-        // float max = max(r, g, b);
-        // float min = min(r, g, b);
-        // float l = (max + min) / 2;
-
-        // if (max == min) {
-        //     mHue = 0.0f;
-        //     mBlack = 1.0f - l;
-        //     mWhite = l;
-        // } else {
-        //     float d = max - min, h;
-        //     /* float s = l > 0.5 ? d / (2 - max - min) : d / (max + min); */
-        //     if (max == r)
-        //         h = (g - b) / d + (g < b ? 6 : 0);
-        //     else if (max == g)
-        //         h = (b - r) / d + 2;
-        //     else
-        //         h = (r - g) / d + 4;
-        //     h /= 6;
-
-        //     mHue = h;
-
-        //     // Eigen::Matrix<float, 4, 3> M;
-        //     // M.topLeftCorner<3, 1>() = hue2rgb(h).head<3>();
-        //     // M(3, 0) = 1.;
-        //     // M.col(1) = Vector4f{ 0., 0., 0., 1. };
-        //     // M.col(2) = Vector4f{ 1., 1., 1., 1. };
-
-        //     // Vector4f rgb4{ rgb[0], rgb[1], rgb[2], 1. };
-        //     // Vector3f bary = M.colPivHouseholderQr().solve(rgb4);
-
-        //     // mBlack = bary[1];
-        //     // mWhite = bary[2];
-        // }
     }
 
     /// The preferred size of this ColorWheel.
@@ -198,23 +159,25 @@ class ColorWheel : Widget
         nvg.stroke();
 
         // Select circle on triangle
-        auto sqrt3 = sqrt(3.0f);
-        auto sat = mBlack;
-        auto val = mWhite;
-        auto X = r0 - 6 + r0 * (2 * val - sat * val - 1) * sqrt3 / 2;
-        auto Y = r0 + r0 * (1 - 3 * sat * val) / 2;
-        float sx = X; //r*(1 - mWhite - mBlack) + ax*mWhite + bx*mBlack;
-        float sy = Y; //                          ay*mWhite + by*mBlack;
+        auto pa = Vector2f(r, 0.0f);
+        auto pb = Vector2f(bx, by);
+        auto pc = Vector2f(ax, ay);
+        auto sp = lerp(lerp(pc, pa, mBlack), pb, (1 - mWhite));
 
         nvg.strokeWidth(u);
         nvg.beginPath();
-        nvg.circle(sx,sy,2*u);
+        nvg.circle(sp.x, sp.y, 2*u);
         nvg.strokeColor(Color(255,255,255,192));
         nvg.stroke();
 
         nvg.restore();
 
         nvg.restore();
+    }
+
+    Vector2f rotate(Vector2f v, float cos_a, float sin_a)
+    {
+        return Vector2f(v.x * cos_a - v.y * sin_a, v.x * sin_a + v.y * cos_a);
     }
 
     /// Handles mouse button click events for the ColorWheel.
@@ -273,8 +236,6 @@ private:
         }
 
         return Color(r, g, b, 1.0f);
-        // result.rgba[] *= 255f;
-        // return result;
     }
 
     Color rgb2hsv(Color color) const
@@ -343,61 +304,45 @@ private:
 
         float r = r0 - 6;
 
-        auto sqrt3 = sqrt(3.0f);
-        auto x1 = x / r;
-        auto y1 = y / r;
-        if (0 * x1 + 2 * y1 > 1) return Region.None;
-        else if (sqrt3 * x1 + (-1) * y1 > 1) return Region.None;
-        else if (-sqrt3 * x1 + (-1) * y1 > 1) return Region.None;
-        else
-        {
-            // Triangle
-            mBlack = (1 - 2 * y1) / (sqrt3 * x1 - y1 + 2);
-            mWhite = (sqrt3 * x1 - y1 + 2) / 3;
+        auto pa = Vector2f(r, 0.0f);
+        auto pb = Vector2f(cos(-120.0f/180.0f*NVG_PI) * r, sin(-120.0f/180.0f*NVG_PI) * r);
+        auto pc = Vector2f(cos( 120.0f/180.0f*NVG_PI) * r, sin( 120.0f/180.0f*NVG_PI) * r);
 
-            return Region.InnerTriangle;
-        }
+        auto pt = Vector2f(x, y).rotate(-mHue * 2.0f * NVG_PI);
 
-        // float ax = cos( 120.0f/180.0f*NVG_PI) * r;
-        // float ay = sin( 120.0f/180.0f*NVG_PI) * r;
-        // float bx = cos(-120.0f/180.0f*NVG_PI) * r;
-        // float by = sin(-120.0f/180.0f*NVG_PI) * r;
+        import gfm.math.shapes : Triangle;
 
-        // // typedef Eigen::Matrix<float,2,2>        Matrix2f;
+        auto sv = Triangle!(float, 2)(pa, pb, pc);
+        auto inTriangle = sv.contains(pt);
 
-        // // Eigen::Matrix<float, 2, 3> triangle;
-        // // triangle << ax,bx,r,
-        // //             ay,by,0;
-        // // triangle = Eigen::Rotation2D<float>(mHue * 2 * NVG_PI).matrix() * triangle;
+        if ((consideredRegions & Region.InnerTriangle) &&
+            (inTriangle || consideredRegions == Region.InnerTriangle)) {
+                if (!(consideredRegions & Region.InnerTriangle))
+                    return Region.None;
+                //if (!sv.contains(pt))
+                    //pt = sv.closestPoint(pt);
+                float uu, vv, ww;
+                sv.barycentricCoords(pt, uu, vv, ww);
+                import gfm.math.funcs : clamp;
+                mWhite = clamp(1.0f - vv, 0.0001f, 1.0f);
+                mBlack = clamp(uu / mWhite, 0.0001f, 1.0f);
+                if (mCallback)
+                    mCallback(color());
+                return Region.InnerTriangle;
+            }
 
-        // // Matrix2f T;
-        // // T << triangle(0,0) - triangle(0,2), triangle(0,1) - triangle(0,2),
-        // //     triangle(1,0) - triangle(1,2), triangle(1,1) - triangle(1,2);
-        // // Vector2f pos { x - triangle(0,2), y - triangle(1,2) };
+        return Region.None;
+    }
 
-        //  Vector2f bary = Vector2f(0, 0);//T.colPivHouseholderQr().solve(pos);
-        //  float l0 = bary[0], l1 = bary[1], l2 = 1 - l0 - l1;
-        // bool triangleTest = l0 >= 0 && l0 <= 1.0f && l1 >= 0.0f && l1 <= 1.0f &&
-        //                     l2 >= 0.0f && l2 <= 1.0f;
-
-        // if ((consideredRegions & Region.InnerTriangle) &&
-        //     (triangleTest || consideredRegions == Region.InnerTriangle)) {
-        //     if (!(consideredRegions & Region.InnerTriangle))
-        //         return Region.None;
-        //     l0 = min(max(0.0f, l0), 1.0f);
-        //     l1 = min(max(0.0f, l1), 1.0f);
-        //     l2 = min(max(0.0f, l2), 1.0f);
-        //     float sum = l0 + l1 + l2;
-        //     l0 /= sum;
-        //     l1 /= sum;
-        //     mWhite = l0;
-        //     mBlack = l1;
-        //     if (mCallback)
-        //         mCallback(color());
-        //     return Region.InnerTriangle;
-        // }
-
-        // return Region.None;
+    void ImTriangleBarycentricCoords(Vector2f a, Vector2f b, Vector2f c, Vector2f p, out float out_u, out float out_v, out float out_w)
+    {
+        auto v0 = b - a;
+        auto v1 = c - a;
+        auto v2 = p - a;
+        const float denom = v0.x * v1.y - v1.x * v0.y;
+        out_v = (v2.x * v1.y - v1.x * v2.y) / denom;
+        out_w = (v0.x * v2.y - v2.x * v0.y) / denom;
+        out_u = 1.0f - out_v - out_w;
     }
 
 protected:
