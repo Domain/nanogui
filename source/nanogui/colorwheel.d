@@ -334,17 +334,6 @@ private:
         return Region.None;
     }
 
-    void ImTriangleBarycentricCoords(Vector2f a, Vector2f b, Vector2f c, Vector2f p, out float out_u, out float out_v, out float out_w)
-    {
-        auto v0 = b - a;
-        auto v1 = c - a;
-        auto v2 = p - a;
-        const float denom = v0.x * v1.y - v1.x * v0.y;
-        out_v = (v2.x * v1.y - v1.x * v2.y) / denom;
-        out_w = (v0.x * v2.y - v2.x * v0.y) / denom;
-        out_u = 1.0f - out_v - out_w;
-    }
-
 protected:
     /// The current Hue in the HSV color model.
     float mHue;

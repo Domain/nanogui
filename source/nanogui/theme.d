@@ -37,6 +37,7 @@ public:
 		mTabControlWidth                  = 20;
 		mTabButtonHorizontalPadding       = 10;
 		mTabButtonVerticalPadding         = 2;
+		mScrollbarWidth					  = 12;
 
 		mDropShadow                       = Color(0, 0, 0, 128);
 		mTransparent                      = Color(0, 0, 0, 0);
@@ -141,6 +142,8 @@ public:
 	int mTabButtonHorizontalPadding;
 	/// The amount of vertical padding for a TabHeader widget (default: `2`).
 	int mTabButtonVerticalPadding;
+	/// The width of scrollbar (default: `12`).
+	int mScrollbarWidth;
 
 	/* Generic colors */
 	/**

@@ -112,7 +112,7 @@ class MyGui : SdlBackend
 			PopupButton imagePanelBtn = new PopupButton(window, "Image Panel");
 			imagePanelBtn.icon(Entypo.ICON_FOLDER);
 			auto popup = imagePanelBtn.popup();
-			VScrollPanel vscroll = new VScrollPanel(popup);
+			auto vscroll = new ScrollPanel(popup);
 			/*ImagePanel imgPanel = new ImagePanel(vscroll);
 			imgPanel.setImages(icons);*/
 			popup.fixedSize(Vector2i(245, 150));
@@ -396,16 +396,17 @@ class MyGui : SdlBackend
 			int height = 300;
 
 			auto window = new Window(screen, "All Icons");
-			window.position(Vector2i(0, 800));
-			window.fixedSize(Vector2i(width, height));
+			window.position(Vector2i(700, 400));
+			window.fixedSize(Vector2i(width, height + window.theme.mWindowHeaderHeight));
+			window.layout = new BoxLayout(Orientation.Horizontal);
 
 			// attach a vertical scroll panel
-			auto vscroll = new VScrollPanel(window);
+			auto vscroll = new ScrollPanel(window);
 			vscroll.fixedSize(Vector2i(width, height));
 
 			// vscroll should only have *ONE* child. screen is what `wrapper` is for
 			auto wrapper = new Widget(vscroll);
-			wrapper.fixedSize(Vector2i(width, height));
+			// wrapper.fixedSize(Vector2i(width, height));
 			wrapper.layout(new GridLayout()); // defaults: 2 columns
 
 			// foreach (i; 0 .. 100)
